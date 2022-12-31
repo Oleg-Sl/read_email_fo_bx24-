@@ -38,13 +38,13 @@ def create_deal(head, emailaddr, body, files):
     # pprint(fields)
     result = bx24.add_deal(fields)
     pprint({
-        "date": datetime.datetime.now(),
+        "date": str(datetime.datetime.now()),
         "result": result
     })
 
 
 def get_head(msg):
-    print(msg["Subject"])
+    # print(msg["Subject"])
     head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
     if head and coding:
         head = head.decode(coding)
