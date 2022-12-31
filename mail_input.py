@@ -44,9 +44,8 @@ def create_deal(head, emailaddr, body, files):
 
 
 def get_head(msg):
-    head, coding = decode_header(msg["Subject"])[0]
-    # print("head = ", head)
-    # print("coding = ", coding)
+    print(msg["Subject"])
+    head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
     if head and coding:
         head = head.decode(coding)
     elif head:
@@ -100,7 +99,6 @@ def get_body(msg):
         f_data = part.get_payload()
         f_name = part.get_filename()
 
-        # print(part)
         if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
             data = f_data
         elif maintype == "text" and subtype == "plain" and disposition != "attachment":

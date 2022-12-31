@@ -25,7 +25,7 @@ def add_deal(fields):
       "fields": fields,
       "params": {"REGISTER_SONET_EVENT": "Y"}
     })
-    pprint(response)
+    # pprint(response)
     if response and "result" in response:
         return response["result"]
 
