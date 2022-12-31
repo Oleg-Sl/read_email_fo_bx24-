@@ -6,9 +6,19 @@ import re
 from pprint import pprint
 import bitrix as bx24
 import secrets
+import datetime
 
 
 PATTERN_DATE = "%Y-%m-%dT%H:%M:%S%z"
+
+
+def byte_decode(raw, encoding="utf-8"):
+    try:
+        data = raw.decode(encoding=encoding)
+    except UnicodeDecodeError:
+        return byte_decode(raw, encoding="cp1251")
+
+    return data
 
 
 def create_deal(head, emailaddr, body, files):
@@ -25,9 +35,13 @@ def create_deal(head, emailaddr, body, files):
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": file} for file in files]         # вложения из почты
     }
-    pprint(fields)
+    # pprint(fields)
     result = bx24.add_deal(fields)
-    pprint(result)
+    pprint({
+        "date": datetime.datetime.now(),
+        "result": result
+    })
+
 
 def get_head(msg):
     head, coding = decode_header(msg["Subject"])[0]
@@ -64,7 +78,7 @@ def get_files(msg):
         if f_name and f_data and disposition == "attachment":
             fname = re.search(r"\?.*\?.*\?(.*)\?", f_name)
             if fname and fname.groups():
-                data.append((base64.b64decode(fname.group(1)).decode(), f_data))
+                data.append((byte_decode(base64.b64decode(fname.group(1))), f_data))
             else:
                 data.append((f_name, f_data))
 
@@ -112,6 +126,7 @@ def mail_get(**secret_data):
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
+        print("Number mail: ", i)
         handler_email(pop3server, i)
 
     secrets.save_mailcount(mailcount)
