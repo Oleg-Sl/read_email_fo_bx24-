@@ -131,7 +131,7 @@ def mail_get(**secret_data):
     mailcount = pop3info[0]
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
-        secrets.save_mailcount(i - 1)
+        secrets.save_mailcount(i)
         handler_email(pop3server, i)
 
     pop3server.quit()
