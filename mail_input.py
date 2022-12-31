@@ -29,7 +29,7 @@ def create_deal(head, emailaddr, body, files):
         contact = contacts[0]
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
-        "UF_CRM_1670388688": str(body),                                     # тело письма
+        "UF_CRM_1670388688": body,                                          # тело письма
         "UF_CRM_1671445904": "",                                            # ид сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
@@ -45,8 +45,13 @@ def create_deal(head, emailaddr, body, files):
 
 def get_head(msg):
     head, coding = decode_header(msg["Subject"])[0]
+    # print("head = ", head)
+    # print("coding = ", coding)
     if head and coding:
         head = head.decode(coding)
+    elif head:
+        head = byte_decode(head)
+
     return head
 
 
@@ -95,6 +100,7 @@ def get_body(msg):
         f_data = part.get_payload()
         f_name = part.get_filename()
 
+        # print(part)
         if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
             data = f_data
         elif maintype == "text" and subtype == "plain" and disposition != "attachment":
@@ -127,8 +133,8 @@ def mail_get(**secret_data):
     mailcount = pop3info[0]
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
+        secrets.save_mailcount(i - 1)
         handler_email(pop3server, i)
 
-    secrets.save_mailcount(mailcount)
     pop3server.quit()
 
