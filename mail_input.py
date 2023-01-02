@@ -14,7 +14,10 @@ PATTERN_DATE = "%Y-%m-%dT%H:%M:%S%z"
 
 def byte_decode(raw, encoding="utf-8"):
     try:
-        data = raw.decode(encoding=encoding)
+        if isinstance(raw, bytes):
+            data = raw.decode(encoding=encoding)
+        else:
+            data = raw
     except UnicodeDecodeError:
         return byte_decode(raw, encoding="cp1251")
 
@@ -94,7 +97,7 @@ def get_body(msg):
     for part in msg.walk():
         maintype = part.get_content_maintype()
         subtype = part.get_content_subtype()
-        charset = part.get_content_charset()
+        charset = part.get_content_charset() or "utf-8"
         disposition = part.get_content_disposition()
         f_data = part.get_payload()
         f_name = part.get_filename()
