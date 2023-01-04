@@ -24,16 +24,25 @@ def byte_decode(raw, encoding="utf-8"):
     return data
 
 
+def get_id_deal_from_head(head):
+    if head:
+        id_deal_regular = re.search("ID: (\d*);", head)
+    if id_deal_regular and id_deal_regular.groups():
+        id_deal = id_deal_regular.group(1)
+    return id_deal
+
+
 def create_deal(head, emailaddr, body, files):
     # Получение ID контакта по email
     contact = None
     contacts = bx24.get_contact_by_email(emailaddr)
     if contacts:
         contact = contacts[0]
+
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
         "UF_CRM_1670388688": body,                                          # тело письма
-        "UF_CRM_1671445904": "",                                            # ид сделки, если будет в теме письма
+        "UF_CRM_1671445904": get_id_deal_from_head(head),                   # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": file} for file in files]         # вложения из почты
@@ -95,6 +104,7 @@ def get_files(msg):
 def get_body(msg):
     data = None
     for part in msg.walk():
+        # print(part)
         maintype = part.get_content_maintype()
         subtype = part.get_content_subtype()
         charset = part.get_content_charset() or "utf-8"
@@ -109,6 +119,8 @@ def get_body(msg):
                 data = base64.b64decode(part.get_payload()).decode(encoding=charset, errors="ignore")
             except ValueError as err:
                 data = f_data
+        elif maintype == "text" and subtype == "html" and disposition != "attachment":
+            data = f_data
 
     return data
 
