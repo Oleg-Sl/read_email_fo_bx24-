@@ -104,29 +104,67 @@ def get_files(msg):
 
 
 def get_body(msg):
-    data = None
-    for part in msg.walk():
-        # print(part)
-        maintype = part.get_content_maintype()
-        subtype = part.get_content_subtype()
-        charset = part.get_content_charset() or "utf-8"
-        disposition = part.get_content_disposition()
-        f_data = part.get_payload()
-        f_name = part.get_filename()
-        if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
-            data = f_data
-        elif maintype == "text" and subtype == "plain" and disposition != "attachment":
-            try:
-                data = base64.b64decode(part.get_payload()).decode(encoding=charset, errors="ignore")
-            except ValueError as err:
-                data = f_data
-        elif maintype == "text" and subtype == "html" and disposition != "attachment":
-            try:
-                data = base64.b64decode(f_data)
-            except Exception:
-                data = f_data
+    body = None
+    if msg.is_multipart():
+        for part in msg.walk():
+            ctype = part.get_content_type()
+            cdispo = str(part.get('Content-Disposition'))
 
-    return data
+            if ctype == 'text/plain' and 'attachment' not in cdispo:
+                charset = part.get_content_charset()
+                # print("charset = ", charset)
+                body = part.get_payload(decode=True)
+                if charset and isinstance(body, bytes):
+                    body = body.decode(encoding=charset, errors="ignore")
+                break
+    else:
+        charset = msg.get_content_charset()
+        body = msg.get_payload(decode=True).decode(msg.get_content_charset())
+        if charset and isinstance(body, bytes):
+            body = body.decode(encoding=charset, errors="ignore")
+
+    if isinstance(body, bytes):
+        body = byte_decode(body)
+
+    return body
+
+    # data = None
+    # for part in msg.walk():
+    #     # print(part)
+    #     maintype = part.get_content_maintype()
+    #     subtype = part.get_content_subtype()
+    #     charset = part.get_content_charset() or "utf-8"
+    #     disposition = part.get_content_disposition()
+    #     f_data = part.get_payload(decode=True)
+    #     f_name = part.get_filename()
+    #     is_multipart = msg.is_multipart()
+    #     if maintype == "text":
+    #         print("*"*88)
+    #         print("is_multipart = ", is_multipart)
+    #         print("maintype = ", maintype)
+    #         print("subtype = ", subtype)
+    #         print("disposition = ", disposition)
+    #         print("charset = ", charset)
+    #         print("f_name = ", f_name)
+    #         print("f_data = ", f_data)
+    #     if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
+    #         data = f_data
+    #     elif maintype == "text" and subtype == "plain" and disposition != "attachment":
+    #         try:
+    #             print("data = ", f_data.decode(encoding=charset, errors="ignore"))
+    #             # print("data = ", base64.b64decode(f_data))
+    #             # data = base64.b64decode(part.get_payload()).decode(encoding=charset, errors="ignore")
+    #             # print("data = ", data)
+    #         except ValueError as err:
+    #             data = f_data
+    #
+    #     # elif maintype == "text" and subtype == "html" and disposition != "attachment":
+    #     #     try:
+    #     #         data = base64.b64decode(f_data)
+    #     #     except Exception:
+    #     #         data = f_data
+    #
+    # return data
 
 
 def handler_email(pop3server, number):
@@ -135,6 +173,8 @@ def handler_email(pop3server, number):
     emailaddr = get_email(msg)
     body = get_body(msg)
     files = get_files(msg)
+    # print("*"*88)
+    # print(body)
     create_deal(head=head, emailaddr=emailaddr, body=body, files=files)
 
 
@@ -148,7 +188,6 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 993)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
         secrets.save_mailcount(i)
