@@ -113,7 +113,12 @@ def get_body(msg):
         disposition = part.get_content_disposition()
         f_data = part.get_payload()
         f_name = part.get_filename()
-
+        # print("*"*88)
+        # print("maintype = ", maintype)
+        # print("subtype = ", subtype)
+        # print("subtype = ", subtype)
+        # print("charset = ", charset)
+        # print("f_name = ", f_name)
         if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
             data = f_data
         elif maintype == "text" and subtype == "plain" and disposition != "attachment":
@@ -122,7 +127,10 @@ def get_body(msg):
             except ValueError as err:
                 data = f_data
         elif maintype == "text" and subtype == "html" and disposition != "attachment":
-            data = f_data
+            try:
+                data = base64.b64decode(f_data)
+            except Exception:
+                data = f_data
 
     return data
 
@@ -133,7 +141,8 @@ def handler_email(pop3server, number):
     emailaddr = get_email(msg)
     body = get_body(msg)
     files = get_files(msg)
-    create_deal(head=head, emailaddr=emailaddr, body=body, files=files)
+    print(body)
+    # create_deal(head=head, emailaddr=emailaddr, body=body, files=files)
 
 
 def mail_get(**secret_data):
@@ -146,10 +155,11 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    for i in range(secret_data["countmail"] + 1, mailcount + 1):
-        print("Number mail: ", i)
-        secrets.save_mailcount(i)
-        handler_email(pop3server, i)
+    handler_email(pop3server, 993)
+    # for i in range(secret_data["countmail"] + 1, mailcount + 1):
+    #     print("Number mail: ", i)
+    #     secrets.save_mailcount(i)
+    #     handler_email(pop3server, i)
 
     pop3server.quit()
 
