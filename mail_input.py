@@ -7,9 +7,22 @@ from pprint import pprint
 import bitrix as bx24
 import secrets
 import datetime
-
+from html.parser import HTMLParser
 
 PATTERN_DATE = "%Y-%m-%dT%H:%M:%S%z"
+
+
+class MyHTMLParser(HTMLParser):
+    def reset(self):
+        HTMLParser.reset(self)
+        self.content = []
+
+    def get_data(self):
+        return self.content
+
+    def handle_data(self, data):
+        if not self.get_starttag_text() == "<style>" and data:
+            self.content.append(data)
 
 
 def byte_decode(raw, encoding="utf-8"):
@@ -40,16 +53,18 @@ def create_deal(head, emailaddr, body, files):
     contacts = bx24.get_contact_by_email(emailaddr)
     if contacts:
         contact = contacts[0]
-
+    parser = MyHTMLParser()
+    parser.reset()
+    parser.feed(body)
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
-        "UF_CRM_1670388688": body,                                          # тело письма
+        "UF_CRM_1670388688": " ".join(parser.get_data()),                   # тело письма
         "UF_CRM_1671445904": get_id_deal_from_head(head),                   # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": file} for file in files]         # вложения из почты
     }
-
+    # pprint(fields)
     result = bx24.add_deal(fields)
     pprint({
         "date": str(datetime.datetime.now()),
@@ -58,7 +73,6 @@ def create_deal(head, emailaddr, body, files):
 
 
 def get_head(msg):
-    # print(msg["Subject"])
     head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
     if head and coding:
         head = head.decode(coding)
@@ -93,7 +107,7 @@ def get_files(msg):
         f_name = part.get_filename()
         f_data = part.get_payload()
 
-        if f_name and f_data and disposition == "attachment":
+        if f_name and f_data and (disposition == "attachment" or maintype == "image"):
             fname = re.search(r"\?.*\?.*\?(.*)\?", f_name)
             if fname and fname.groups():
                 data.append((byte_decode(base64.b64decode(fname.group(1))), f_data))
@@ -173,8 +187,6 @@ def handler_email(pop3server, number):
     emailaddr = get_email(msg)
     body = get_body(msg)
     files = get_files(msg)
-    # print("*"*88)
-    # print(body)
     create_deal(head=head, emailaddr=emailaddr, body=body, files=files)
 
 
@@ -188,6 +200,8 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
+    # handler_email(pop3server, 1253)
+    # # handler_email(pop3server, 1427)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
         secrets.save_mailcount(i)
