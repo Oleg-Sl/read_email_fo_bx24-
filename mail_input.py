@@ -66,8 +66,6 @@ def create_deal(head, emailaddr, body, files):
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": list(file)} for file in files]   # вложения из почты
     }
-    # pprint(fields)
-    # pprint(len(fields["UF_CRM_1671611551"]))
     result = bx24.add_deal(fields)
     pprint({
         "date": str(datetime.datetime.now()),
@@ -126,10 +124,8 @@ def get_body(msg):
         for part in msg.walk():
             ctype = part.get_content_type()
             cdispo = str(part.get('Content-Disposition'))
-
-            if ctype == 'text/plain' and 'attachment' not in cdispo:
+            if ctype in ['text/plain', 'text/html'] and 'attachment' not in cdispo:
                 charset = part.get_content_charset()
-                # print("charset = ", charset)
                 body = part.get_payload(decode=True)
                 if charset and isinstance(body, bytes):
                     body = body.decode(encoding=charset, errors="ignore")
