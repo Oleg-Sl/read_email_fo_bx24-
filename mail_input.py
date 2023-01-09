@@ -53,12 +53,14 @@ def create_deal(head, emailaddr, body, files):
     contacts = bx24.get_contact_by_email(emailaddr)
     if contacts:
         contact = contacts[0]
-    parser = MyHTMLParser()
-    parser.reset()
-    parser.feed(body)
+    if body:
+        parser = MyHTMLParser()
+        parser.reset()
+        parser.feed(body)
+        body = " ".join(parser.get_data())
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
-        "UF_CRM_1670388688": " ".join(parser.get_data()),                   # тело письма
+        "UF_CRM_1670388688": body,                                          # тело письма
         "UF_CRM_1671445904": get_id_deal_from_head(head),                   # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
@@ -200,12 +202,13 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 1253)
-    # # handler_email(pop3server, 1427)
+    # handler_email(pop3server, 1518)
+    # handler_email(pop3server, 1485)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
         secrets.save_mailcount(i)
         handler_email(pop3server, i)
 
     pop3server.quit()
+
 
