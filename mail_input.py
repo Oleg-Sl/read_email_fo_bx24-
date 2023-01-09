@@ -26,13 +26,13 @@ class MyHTMLParser(HTMLParser):
 
 
 def byte_decode(raw, encoding="utf-8"):
+    data = raw
     try:
         if isinstance(raw, bytes):
             data = raw.decode(encoding=encoding)
-        else:
-            data = raw
     except UnicodeDecodeError:
-        return byte_decode(raw, encoding="cp1251")
+        if encoding != "cp1251":
+            return byte_decode(raw, encoding="cp1251")
 
     return data
 
@@ -64,9 +64,10 @@ def create_deal(head, emailaddr, body, files):
         "UF_CRM_1671445904": get_id_deal_from_head(head),                   # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
-        "UF_CRM_1671611551": [{"fileData": file} for file in files]         # вложения из почты
+        "UF_CRM_1671611551": [{"fileData": list(file)} for file in files]   # вложения из почты
     }
     # pprint(fields)
+    # pprint(len(fields["UF_CRM_1671611551"]))
     result = bx24.add_deal(fields)
     pprint({
         "date": str(datetime.datetime.now()),
@@ -109,10 +110,10 @@ def get_files(msg):
         f_name = part.get_filename()
         f_data = part.get_payload()
 
-        if f_name and f_data and (disposition == "attachment" or maintype == "image"):
-            fname = re.search(r"\?.*\?.*\?(.*)\?", f_name)
-            if fname and fname.groups():
-                data.append((byte_decode(base64.b64decode(fname.group(1))), f_data))
+        if f_name  and (disposition == "attachment" or maintype == "image"):
+            regular = re.search(r"\?(.*)\?.*\?(.*)\?", f_name)
+            if regular and regular.groups() and len(regular.groups()) == 2:
+                data.append((byte_decode(base64.b64decode(regular.group(2)), regular.group(1)), f_data))
             else:
                 data.append((f_name, f_data))
 
@@ -202,8 +203,8 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 1518)
-    # handler_email(pop3server, 1485)
+    # handler_email(pop3server, 1569)
+    # handler_email(pop3server, 1555)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
         secrets.save_mailcount(i)
