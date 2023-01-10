@@ -38,6 +38,7 @@ def byte_decode(raw, encoding="utf-8"):
 
 
 def get_id_deal_from_head(head):
+    print(head)
     id_deal = None
     id_deal_regular = None
     if head:
@@ -58,6 +59,7 @@ def create_deal(head, emailaddr, body, files):
         parser.reset()
         parser.feed(body)
         body = " ".join(parser.get_data())
+
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
         "UF_CRM_1670388688": body,                                          # тело письма
@@ -66,6 +68,8 @@ def create_deal(head, emailaddr, body, files):
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": list(file)} for file in files]   # вложения из почты
     }
+    # pprint(fields["UF_CRM_1670388481"])
+    # pprint(fields["UF_CRM_1671445904"])
     result = bx24.add_deal(fields)
     pprint({
         "date": str(datetime.datetime.now()),
@@ -74,13 +78,23 @@ def create_deal(head, emailaddr, body, files):
 
 
 def get_head(msg):
-    head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
-    if head and coding:
-        head = head.decode(coding)
-    elif head:
-        head = byte_decode(head)
+    title = ""
+    heads = decode_header(msg["Subject"]) if msg.get("Subject") else []
+    for head, coding in heads:
+        # print(head, " - ", coding)
+        if head and coding:
+            title += head.decode(coding)
+        elif head:
+            title += byte_decode(head)
+    # head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
+    # head_1, coding_2 = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
+    # print(decode_header(msg["Subject"]))
+    # if head and coding:
+    #     head = head.decode(coding)
+    # elif head:
+    #     head = byte_decode(head)
 
-    return head
+    return title
 
 
 def get_date(msg):
@@ -199,7 +213,7 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 1569)
+    # handler_email(pop3server, 1649)
     # handler_email(pop3server, 1555)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
