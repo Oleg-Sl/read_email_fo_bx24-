@@ -38,7 +38,7 @@ def byte_decode(raw, encoding="utf-8"):
 
 
 def get_id_deal_from_head(head):
-    print(head)
+    # print(head)
     id_deal = None
     id_deal_regular = None
     if head:
