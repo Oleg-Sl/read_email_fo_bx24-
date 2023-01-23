@@ -42,3 +42,26 @@ def get_webhook():
         webhook = data.get("webhook", None)
 
     return webhook
+
+
+def get_secrets_value(key):
+    if not os.path.exists(PATH_SECRET_FILE):
+        return None
+
+    value = None
+    with open(PATH_SECRET_FILE) as secrets_file:
+        data = json.load(secrets_file)
+        value = data.get(key, None)
+
+    return value
+
+
+def save_secrets_value(key, value):
+    data = {}
+    with open(PATH_SECRET_FILE, 'r') as secrets_file:
+        data = json.load(secrets_file)
+        data[key] = value
+
+    # запись новых токенов в файл
+    with open(PATH_SECRET_FILE, 'w+') as secrets_file:
+        json.dump(data, secrets_file)

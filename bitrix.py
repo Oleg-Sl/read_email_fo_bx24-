@@ -9,6 +9,45 @@ import secrets
 API = secrets.get_webhook() + "{method}.json"
 
 
+def requests_bath(cmd):
+    method = "batch"
+    response = request_bx(method, {
+      'halt': 0,
+      'cmd': cmd
+    })
+    if response and "result" in response:
+        return response["result"]
+
+
+def get_contact_by_phone(phone):
+    method = "crm.contact.list"
+    response = request_bx(method, {
+        "filter": {"PHONE": phone},
+        "select": ["*"]
+    })
+    if response and "result" in response:
+        return response["result"]
+
+
+def get_company_by_contact(id_contact):
+    method = "crm.contact.company.items.get"
+    response = request_bx(method, {
+        "id": id_contact
+    })
+    if response and "result" in response:
+        return response["result"]
+
+
+def get_file_data(file_id):
+    method = "disk.file.get"
+    response = request_bx(method, {
+        "id": file_id
+    })
+    pprint(response)
+    if response and "result" in response:
+        return response["result"]
+
+
 def get_contact_by_email(email):
     method = "crm.contact.list"
     response = request_bx(method, {
@@ -25,7 +64,7 @@ def add_deal(fields):
       "fields": fields,
       "params": {"REGISTER_SONET_EVENT": "Y"}
     })
-    # pprint(response)
+    pprint(response)
     if response and "result" in response:
         return response["result"]
 
