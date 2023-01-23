@@ -76,9 +76,9 @@ def create_deal(head, emailaddr, body, files):
 
     # создание сделки
     result = bx24.add_deal(fields)
-    if deal_id:
-        # добавление содержимого письма в таймлайн сделки
-        bx24.add_comment_to_timeline(deal_id, "deal", body)
+    # if deal_id:
+    #     # добавление содержимого письма в таймлайн сделки
+    #     bx24.add_comment_to_timeline(deal_id, "deal", body)
 
     pprint({
         "date": str(datetime.datetime.now()),
