@@ -54,23 +54,32 @@ def create_deal(head, emailaddr, body, files):
     contacts = bx24.get_contact_by_email(emailaddr)
     if contacts:
         contact = contacts[0]
+
+    # парсинг содержимого письма
     if body:
         parser = MyHTMLParser()
         parser.reset()
         parser.feed(body)
         body = " ".join(parser.get_data())
 
+    # ID сделки из темы письма
+    deal_id = get_id_deal_from_head(head)
+
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
-        "UF_CRM_1670388688": body,                                          # тело письма
-        "UF_CRM_1671445904": get_id_deal_from_head(head),                   # ID сделки, если будет в теме письма
+        "UF_CRM_1670388688": body if deal_id else None,                     # тело письма
+        "UF_CRM_1671445904": deal_id,                                       # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
         "UF_CRM_1671611551": [{"fileData": list(file)} for file in files]   # вложения из почты
     }
-    # pprint(fields["UF_CRM_1670388481"])
-    # pprint(fields["UF_CRM_1671445904"])
+
+    # создание сделки
     result = bx24.add_deal(fields)
+    if deal_id:
+        # добавление содержимого письма в таймлайн сделки
+        bx24.add_comment_to_timeline(deal_id, "deal", body)
+
     pprint({
         "date": str(datetime.datetime.now()),
         "result": result

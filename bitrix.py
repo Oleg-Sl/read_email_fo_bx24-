@@ -69,6 +69,19 @@ def add_deal(fields):
         return response["result"]
 
 
+def add_comment_to_timeline(entity_id, entity_type, comment):
+    method = "crm.timeline.comment.add"
+    response = request_bx(method, {
+        "fields": {
+            "ENTITY_ID": entity_id,
+            "ENTITY_TYPE": entity_type,
+            "COMMENT": comment
+        },
+    })
+    if response and "result" in response:
+        return response["result"]
+
+
 # Запрос к Битрикс
 def request_bx(method, data, count=5):
     timeout = 60
