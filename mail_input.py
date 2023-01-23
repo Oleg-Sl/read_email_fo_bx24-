@@ -67,7 +67,7 @@ def create_deal(head, emailaddr, body, files):
 
     fields = {
         "UF_CRM_1670388481": head,                                          # тема
-        "UF_CRM_1670388688": body if deal_id else None,                     # тело письма
+        "UF_CRM_1670388688": body,                                          # тело письма
         "UF_CRM_1671445904": deal_id,                                       # ID сделки, если будет в теме письма
         "UF_CRM_1671515915": emailaddr,                                     # email
         "UF_CRM_1671516029": contact.get("ID", None) if contact else None,  # ид контакта, если найдется
@@ -131,7 +131,7 @@ def get_files(msg):
         f_name = part.get_filename()
         f_data = part.get_payload()
 
-        if f_name  and (disposition == "attachment" or maintype == "image"):
+        if f_name and (disposition == "attachment" or maintype == "image"):
             regular = re.search(r"\?(.*)\?.*\?(.*)\?", f_name)
             if regular and regular.groups() and len(regular.groups()) == 2:
                 data.append((byte_decode(base64.b64decode(regular.group(2)), regular.group(1)), f_data))
