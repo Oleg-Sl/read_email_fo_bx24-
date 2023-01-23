@@ -29,8 +29,8 @@ class Rating:
 
     def init(self):
         date = datetime.date.today()
-        from_date = datetime.datetime.strptime(get_secrets_value("sipuni_date"), "%Y-%m-%d")
-        # from_date = date - datetime.timedelta(days=2)
+        # from_date = datetime.datetime.strptime(get_secrets_value("sipuni_date"), "%Y-%m-%d")
+        from_date = date - datetime.timedelta(days=2)
         to_date = date - datetime.timedelta(days=1)
         rating = self.get_rating(from_date, to_date)
         self.save_rating_to_bx24(rating)
