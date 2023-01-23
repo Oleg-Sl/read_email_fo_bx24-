@@ -33,6 +33,7 @@ class Rating:
         from_date = date - datetime.timedelta(days=2)
         to_date = date - datetime.timedelta(days=1)
         rating = self.get_rating(from_date, to_date)
+        print(rating)
         self.save_rating_to_bx24(rating)
 
     def save_rating_to_bx24(self, records):
@@ -48,15 +49,25 @@ class Rating:
             if not contacts:
                 continue
 
-            # поиск сделки связанной с контактом
-            cmd = {}
-
-            cmd["company"] = f"crm.contact.company.items.get?id={contacts[0]}"
-            cmd["deal"] = f"crm.deal.list?filter[COMPANY_ID]=$result[company][0][COMPANY_ID]&order[ID]=DESC&select[]=ID"
-            resp_deals = bx24.requests_bath(cmd).get("result")
-            if not resp_deals["company"] or not resp_deals["deal"]:
+            deals_ = bx24.request_bx("crm.deal.list", {
+                "filter": {"CONTACT_ID": contacts[0]},
+                "order": {"ID": "DESC"},
+                "select": ["ID", ]
+            })
+            if "result" not in deals_ or not deals_["result"]:
                 continue
-            deals = resp_deals["deal"]
+
+            deals = deals_["result"]
+            if not deals:
+                # поиск сделки связанной с контактом
+                cmd = {}
+                cmd["company"] = f"crm.contact.company.items.get?id={contacts[0]}"
+                cmd["deal"] = f"crm.deal.list?filter[COMPANY_ID]=$result[company][0][COMPANY_ID]&order[ID]=DESC&select[]=ID"
+                resp_deals = bx24.requests_bath(cmd).get("result")
+                if not resp_deals["company"] or not resp_deals["deal"]:
+                    continue
+                deals = resp_deals["deal"]
+
             if isinstance(deals, list) and deals:
                 deal_id = deals[0].get("ID")
                 print(record)
