@@ -8,7 +8,7 @@ def get_language_id_by_name(name):
 def get_list_variation_phone(phone):
     phones = [
         phone,
-        f"+7{phone}",
+        f"%2B7{phone}",
         f"7{phone}",
         f"8{phone}",
     ]
