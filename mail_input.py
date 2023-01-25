@@ -131,7 +131,7 @@ def get_files(msg):
         f_data = part.get_payload()
 
         if f_name and (disposition == "attachment" or maintype == "image"):
-            regular = re.search(r"\?([^?]*)\?.*\?(.*)\?", f_name)
+            regular = re.search(r"\?([^?]*)\?[^?]*\?([^?]*)\?", f_name)
             if regular and regular.groups() and len(regular.groups()) == 2:
                 data.append((byte_decode(base64.b64decode(regular.group(2)), regular.group(1)), f_data))
             else:
@@ -221,7 +221,7 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 3026)
+    # handler_email(pop3server, 3025)
     # handler_email(pop3server, 2928)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
