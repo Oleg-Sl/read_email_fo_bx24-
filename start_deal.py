@@ -1,18 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import base64
-from mail_input import mail_get
-from mail_output import send_mail
-import secrets
+from get_mail_and_create_deal.mail_input import mail_get
+from services import secrets
 
 
-def main():
+if __name__ == "__main__":
     secret = secrets.get_secrets()
     if secret and "server" in secret and "username" in secret and "password" in secret and "countmail" in secret:
         mail_get(**secret)
     else:
         print("Отсутствует файл 'secrets.json' или данные в нем!")
 
-
-if __name__ == "__main__":
-    main()

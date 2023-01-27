@@ -1,17 +1,18 @@
-import poplib
-import email
 from email.header import decode_header
-import base64
-import re
-from pprint import pprint
-import bitrix as bx24
-import secrets
-import datetime
 from html.parser import HTMLParser
+from pprint import pprint
+import datetime
+import poplib
+import base64
+import email
+import re
+
+from services import bitrix as bx24, secrets
 
 PATTERN_DATE = "%Y-%m-%dT%H:%M:%S%z"
 
 
+# Парсинг содержимого письма - удаление HTML тегов
 class MyHTMLParser(HTMLParser):
     def reset(self):
         HTMLParser.reset(self)
@@ -25,6 +26,7 @@ class MyHTMLParser(HTMLParser):
             self.content.append(data)
 
 
+# Декодирование байтового содержимого в текст
 def byte_decode(raw, encoding="utf-8"):
     data = raw
     try:
@@ -37,6 +39,7 @@ def byte_decode(raw, encoding="utf-8"):
     return data
 
 
+# Получение ID сделки из темы письма
 def get_id_deal_from_head(head):
     id_deal = None
     id_deal_regular = None
@@ -47,6 +50,7 @@ def get_id_deal_from_head(head):
     return id_deal
 
 
+# Создание сделки на основе письма
 def create_deal(head, emailaddr, body, files):
     # Получение ID контакта по email
     contact = None
@@ -85,22 +89,15 @@ def create_deal(head, emailaddr, body, files):
     })
 
 
+# Получение темы письма
 def get_head(msg):
     title = ""
     heads = decode_header(msg["Subject"]) if msg.get("Subject") else []
     for head, coding in heads:
-        # print(head, " - ", coding)
         if head and coding:
             title += head.decode(coding)
         elif head:
             title += byte_decode(head)
-    # head, coding = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
-    # head_1, coding_2 = decode_header(msg["Subject"])[0] if msg.get("Subject") else (None, None)
-    # print(decode_header(msg["Subject"]))
-    # if head and coding:
-    #     head = head.decode(coding)
-    # elif head:
-    #     head = byte_decode(head)
 
     return title
 
@@ -110,6 +107,7 @@ def get_date(msg):
     return letter_date
 
 
+# Получение email адреса
 def get_email(msg):
     email_str = email.header.make_header(email.header.decode_header(msg['From']))
     res = re.search(r".*<(\S*)>", email_str.encode())
@@ -120,6 +118,7 @@ def get_email(msg):
     return addr
 
 
+# Получение вложенных файлов из письма
 def get_files(msg):
     data = []
     for part in msg.walk():
@@ -140,6 +139,7 @@ def get_files(msg):
     return data
 
 
+# Получение содержимого письма
 def get_body(msg):
     body = None
     if msg.is_multipart():
@@ -163,54 +163,23 @@ def get_body(msg):
 
     return body
 
-    # data = None
-    # for part in msg.walk():
-    #     # print(part)
-    #     maintype = part.get_content_maintype()
-    #     subtype = part.get_content_subtype()
-    #     charset = part.get_content_charset() or "utf-8"
-    #     disposition = part.get_content_disposition()
-    #     f_data = part.get_payload(decode=True)
-    #     f_name = part.get_filename()
-    #     is_multipart = msg.is_multipart()
-    #     if maintype == "text":
-    #         print("*"*88)
-    #         print("is_multipart = ", is_multipart)
-    #         print("maintype = ", maintype)
-    #         print("subtype = ", subtype)
-    #         print("disposition = ", disposition)
-    #         print("charset = ", charset)
-    #         print("f_name = ", f_name)
-    #         print("f_data = ", f_data)
-    #     if maintype == "text" and subtype == "plain" and disposition != "attachment" and charset == "us-ascii":
-    #         data = f_data
-    #     elif maintype == "text" and subtype == "plain" and disposition != "attachment":
-    #         try:
-    #             print("data = ", f_data.decode(encoding=charset, errors="ignore"))
-    #             # print("data = ", base64.b64decode(f_data))
-    #             # data = base64.b64decode(part.get_payload()).decode(encoding=charset, errors="ignore")
-    #             # print("data = ", data)
-    #         except ValueError as err:
-    #             data = f_data
-    #
-    #     # elif maintype == "text" and subtype == "html" and disposition != "attachment":
-    #     #     try:
-    #     #         data = base64.b64decode(f_data)
-    #     #     except Exception:
-    #     #         data = f_data
-    #
-    # return data
 
-
+# Чтение письма
 def handler_email(pop3server, number):
     msg = email.message_from_bytes(b'\r\n'.join(pop3server.retr(number)[1]))
+    # Получение темы письма
     head = get_head(msg)
+    # Получение email адреса
     emailaddr = get_email(msg)
+    # Получение содержимого письма
     body = get_body(msg)
+    # Получение вложенных файлов из письма
     files = get_files(msg)
+    # Создание сделки на основе письма
     create_deal(head=head, emailaddr=emailaddr, body=body, files=files)
 
 
+# Подключение к почтовому ящику и обработка новых писем
 def mail_get(**secret_data):
     pop3server = secret_data["server"]
     username = secret_data["username"]

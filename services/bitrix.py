@@ -3,8 +3,7 @@ import json
 import time
 from pprint import pprint
 
-import secrets
-
+from services import secrets
 
 API = secrets.get_webhook() + "{method}.json"
 

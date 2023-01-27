@@ -1,3 +1,4 @@
+# Получение ID значения языка в Битрикс по его текстовому представлению
 def get_language_id_by_name(name):
     if name == "Каз":
         return 44
@@ -5,6 +6,7 @@ def get_language_id_by_name(name):
         return 46
 
 
+# получение списка всех вариаций номера телефона
 def get_list_variation_phone(phone):
     phones = [
         phone,

@@ -1,15 +1,10 @@
-import csv
 import datetime
-import pprint
 
 import sipuni_api
-from hashlib import md5
-from urllib.parse import urlencode
-
 
 from . import services
-from secrets import get_secrets_value, save_secrets_value
-import bitrix as bx24
+from services.secrets import get_secrets_value, save_secrets_value
+from services import bitrix as bx24
 
 FILE_NAME = "secrets.json"
 COLS_CSV = {
@@ -29,13 +24,13 @@ class Rating:
 
     def init(self):
         date = datetime.date.today()
-        # from_date = datetime.datetime.strptime(get_secrets_value("sipuni_date"), "%Y-%m-%d")
-        from_date = date - datetime.timedelta(days=2)
+        from_date = datetime.datetime.strptime(get_secrets_value("sipuni_date"), "%Y-%m-%d")
+        # from_date = date - datetime.timedelta(days=2)
         to_date = date - datetime.timedelta(days=1)
         rating = self.get_rating(from_date, to_date)
-        print(rating)
         self.save_rating_to_bx24(rating)
 
+    # Добавление рейтинга в сдлелку
     def save_rating_to_bx24(self, records):
         for record in records:
             if not record.get("rating") or not record.get("phone"):
@@ -49,6 +44,7 @@ class Rating:
             if not contacts:
                 continue
 
+            # Получение списка сделок связанны с найденным контактом
             deals_ = bx24.request_bx("crm.deal.list", {
                 "filter": {"CONTACT_ID": contacts[0]},
                 "order": {"ID": "DESC"},
@@ -59,7 +55,7 @@ class Rating:
 
             deals = deals_["result"]
             if not deals:
-                # поиск сделки связанной с контактом
+                # поиск сделки связанной с контактом через компанию
                 cmd = {}
                 cmd["company"] = f"crm.contact.company.items.get?id={contacts[0]}"
                 cmd["deal"] = f"crm.deal.list?filter[COMPANY_ID]=$result[company][0][COMPANY_ID]&order[ID]=DESC&select[]=ID"
@@ -68,6 +64,7 @@ class Rating:
                     continue
                 deals = resp_deals["deal"]
 
+            # Добавление рейтинга в сделку
             if isinstance(deals, list) and deals:
                 deal_id = deals[0].get("ID")
                 print(record)
@@ -82,10 +79,12 @@ class Rating:
                     "params": {"REGISTER_SONET_EVENT": "Y"}
                 })
 
+    # Сохранение даты в файл секрета
     def save_date(self, date):
         date_str = date.strftime("%Y-%m-%d", )
         save_secrets_value("sipuni_date", date_str)
 
+    # Получение рейтинга из Sipuni
     def get_rating(self, from_date, to_date):
         rating_csv = self.client.get_call_stats(from_date=from_date, to_date=to_date)
         data_list = []
@@ -99,7 +98,4 @@ class Rating:
                     "language": lst[COLS_CSV["language"]],
                 })
         return data_list
-
-
-
 
