@@ -1,4 +1,5 @@
 import datetime
+import pprint
 
 import sipuni_api
 
@@ -98,5 +99,6 @@ class Rating:
                     "rating": lst[COLS_CSV["rating"]],
                     "language": lst[COLS_CSV["language"]],
                 })
+        print(data_list)
         return data_list
 
