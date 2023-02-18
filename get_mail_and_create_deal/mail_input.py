@@ -77,12 +77,9 @@ def create_deal(head, emailaddr, body, files):
         "UF_CRM_1671611551": [{"fileData": list(file)} for file in files]   # вложения из почты
     }
 
+    # pprint(fields)
     # создание сделки
     result = bx24.add_deal(fields)
-    # if deal_id:
-    #     # добавление содержимого письма в таймлайн сделки
-    #     bx24.add_comment_to_timeline(deal_id, "deal", body)
-
     pprint({
         "date": str(datetime.datetime.now()),
         "result": result
@@ -128,13 +125,24 @@ def get_files(msg):
         disposition = part.get_content_disposition()
         f_name = part.get_filename()
         f_data = part.get_payload()
-
         if f_name and (disposition == "attachment" or maintype == "image"):
-            regular = re.search(r"\?([^?]*)\?[^?]*\?([^?]*)\?", f_name)
-            if regular and regular.groups() and len(regular.groups()) == 2:
-                data.append((byte_decode(base64.b64decode(regular.group(2)), regular.group(1)), f_data))
-            else:
-                data.append((f_name, f_data))
+            # regular = re.search(r"\?([^?]*)\?[^?]*\?([^?]*)\?", f_name)
+            # if regular and regular.groups() and len(regular.groups()) == 2:
+            #     data.append((byte_decode(base64.b64decode(regular.group(2)), regular.group(1)), f_data))
+            # else:
+            #     data.append((f_name, f_data))
+            # print("=> ", f_name)
+            regulars_ = re.findall(r"\?([^?]*)\?[^?]*\?([^?]*)\?", f_name)
+            if regulars_ and isinstance(regulars_, list) and len(regulars_) > 0:
+                f_name = ""
+                for regular_ in regulars_:
+                    if len(regular_) == 2:
+                        try:
+                            name_decode_ = base64.b64decode(regular_[1])
+                        except Exception:
+                            name_decode_ = regular_[1]
+                        f_name += byte_decode(name_decode_, regular_[0])
+            data.append((f_name, f_data))
 
     return data
 
@@ -190,13 +198,11 @@ def mail_get(**secret_data):
     pop3server.pass_(password)
     pop3info = pop3server.stat()
     mailcount = pop3info[0]
-    # handler_email(pop3server, 3025)
-    # handler_email(pop3server, 2928)
+    # handler_email(pop3server, 3816)
     for i in range(secret_data["countmail"] + 1, mailcount + 1):
         print("Number mail: ", i)
         secrets.save_mailcount(i)
         handler_email(pop3server, i)
 
     pop3server.quit()
-
 

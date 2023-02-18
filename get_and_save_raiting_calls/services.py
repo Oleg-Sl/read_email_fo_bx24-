@@ -1,9 +1,12 @@
+FIELD_LANGUAGE_KAZ = 44
+FIELD_LANGUAGE_RUS = 46
+
 # Получение ID значения языка в Битрикс по его текстовому представлению
 def get_language_id_by_name(name):
     if name == "Каз":
-        return 44
+        return FIELD_LANGUAGE_KAZ
     if name == "Рус":
-        return 46
+        return FIELD_LANGUAGE_RUS
 
 
 # получение списка всех вариаций номера телефона

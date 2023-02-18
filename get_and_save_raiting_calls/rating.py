@@ -14,7 +14,8 @@ COLS_CSV = {
   "rating": 10,
   "language": 12
 }
-
+FIELD_DEAL_RATING = "UF_CRM_1670388910"
+FIELD_DEAL_LANGUAGE = "UF_CRM_1670388944"
 
 class Rating:
     def __init__(self) -> None:
@@ -73,8 +74,8 @@ class Rating:
                     "id": deal_id,
                     "fields":
                         {
-                            "UF_CRM_1670388910": record["rating"],
-                            "UF_CRM_1670388944": services.get_language_id_by_name(record["language"])
+                            FIELD_DEAL_RATING: record["rating"],
+                            FIELD_DEAL_LANGUAGE: services.get_language_id_by_name(record["language"])
                         },
                     "params": {"REGISTER_SONET_EVENT": "Y"}
                 })

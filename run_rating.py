@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from raiting_calls.rating import Rating
+from get_and_save_raiting_calls.rating import Rating
 
 
 if __name__ == "__main__":
